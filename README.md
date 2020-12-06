@@ -13,6 +13,6 @@ Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 source('RA_functions.R')
 ```
 ## :heavy_plus_sign: Examples
-* [Case-control study with indepedent samples]()
+* [Case-control study with indepedent samples](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/vignette/case_control_study.md)
 * [Association test with multiple phenotypes and multiple covariates with indepedent samples]()
 * [Association test with a mixture of independent samples and sibling pairs]()
