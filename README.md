@@ -8,7 +8,11 @@ Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 ### Y: phenotype traits, n x J matrix 
 ### Z: covariates, n x K matrix
 ```
-- [Step 2.] Simple examples
+- [Step 2.] Import the source code
 ```R
 source('RA_functions.R')
 ```
+## :heavy_plus_sign: Examples
+* [Case-control study with indepedent samples]()
+* [Association test with multiple phenotypes and multiple covariates with indepedent samples]()
+* [Association test with a mixture of independent samples and sibling pairs]()
