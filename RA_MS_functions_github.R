@@ -104,11 +104,3 @@ RA_pedi_assoc <- function(gIndep, gSib, yMat_indep, yMat_sib, phi=0.25, thres=10
 	return(test_stat[1,1])
 }
 
-### RA test for tri-allelic locus
-
-
-
-### RA HWE test for siblings 
-
-
-
