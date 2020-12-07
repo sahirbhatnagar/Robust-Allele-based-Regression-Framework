@@ -26,7 +26,8 @@ RA_HWE <- function(g){
 
 
 ### Association test for independent samples
-RA_indep <- function(g, y, z=NULL, HWE=F){
+RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
+	## 1: screen for NAs, check var(G), var(Y), var(Z)
 	if(any(is.na(g))){
 		stop('Genotypes contain NAs')
 	}
@@ -37,39 +38,33 @@ RA_indep <- function(g, y, z=NULL, HWE=F){
 		if(any(is.na(z))){
 			stop('Covariates contain NAs')
 		}
-		if(class(z) == 'numeric'){
-			if(var(z) <= 0){
-				stop('Covariates are identical')
-			}
-		}else{
-			temp_z_var <- apply(z, 2, var)
-			if(any(temp_z_var <= 0)){
-				stop('At least one of the covariates are identical')
-			}
+	}else{
+		if(class(z)=='numeric'){
+			z <- matrix(z, ncol=1)
+		}
+		z_var <- apply(z, 2, var)
+		if(any(z_var <= 0)){
+			stop('variance of Z is 0')
 		}
 	}
 	if(var(g) <= 0){
-		stop('All genotypes are identical')
+		stop('variance of G is 0')
 	}
-	if(var(y) <=0){
-		stop('All phenotypes are identical')
+	if(class(y) == 'numeric'){
+		y <- matrix(y, ncol=1)
 	}
-	gRA <- as.numeric(RA_split(g)); n <- length(y)
-	yRA <- rep(y, each=2)
-	p <- mean(gRA)
-	num <- sum(yRA*(gRA-p))
-	if(HWE){
-		print('assuming HWE')
-		sigma_g <- p*(1-p)
+	y_var <- apply(y, 2, var)
+	if(any(y_var <=0)){
+		stop('variance of Y is 0')
+	}
+	if(!is.null(z)){
+		return(RA_indep_Z(g=g, y=y, z=z))
 	}else{
-		p2 <- mean(g==2)
-		sigma_g <- p2-p^2+p*(1-p)
+		return(RA_indep(g=g, y=y))	
 	}
-	sigma_y <- sum(yRA^2)-2*n*mean(yRA)^2
-	return(num^2/sigma_g/sigma_y)
 }
 
-RA_indep <- function(g, y, z){
+RA_indep_Z <- function(g, y, z){
 	n <- length(g)
 	g_RA <- RA_split(g); gbar <- mean(g_RA)
 	g_vec <- matrix(g_RA-gbar, ncol=1)
@@ -88,7 +83,26 @@ RA_indep <- function(g, y, z){
 	rho_mat <- matrix(rho_mat, byrow=T, ncol=2)
 	rho_hat <- sum(rho_mat[,1]*rho_mat[,2])/n/sigma_hat
 	RA_stat <- t(score_vec)%*%solve(t(X)%*%X)%*%score_vec/sigma_hat/(1+rho_hat)
-	return(RA_stat[1,1])
+	RA_pval <- pchisq(RA_stat[1,1], df=nrow(score_fn), lower.tail=F)
+	return(RA_pval)
+}
+
+RA_indep <- function(g, y){
+	n <- length(g)
+	g_RA <- RA_split(g); gbar <- mean(g_RA)
+	g_vec <- matrix(g_RA-gbar, ncol=1)
+	y_RA <- apply(y, 2, function(x) rep(x, each=2))
+	score_fn <- apply(y_RA, 2, function(x) sum(x*g_vec))
+	score_vec <- matrix(c(0, score_fn[,1])), ncol=1)
+	sigma_hat <- gbar*(1-gbar)
+	g_mat <- matrix(g_vec, ncol=2, byrow=T)
+	rho_hat <- sum(g_mat[,1]*g_mat[,2])/n/sigma_hat
+	one_vec <- matrix(rep(1, n*2), ncol=1)
+	y_mat <- as.matrix(cbind(one_vec, y_RA))
+	info_inv <- solve(t(y_mat)%*%y_mat)
+	RA_stat <- t(score_vec)%*%info_inv%*%score_vec/sigma_hat/(1+rho_hat)
+	RA_pval <- pchisq(RA_stat[1,1], df=nrow(score_fn), lower.tail=F)
+	return(RA_pval)
 }
 
 
