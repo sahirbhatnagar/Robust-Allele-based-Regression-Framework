@@ -2,7 +2,7 @@
 Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 
 ## :heavy_plus_sign: Quick Start
-- [Import RA functions](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/RA_functions.R)
+- Import [RA functions](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/RA_functions.R)
 ```R
 source('RA_functions.R')
 ```
