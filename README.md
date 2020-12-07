@@ -46,7 +46,7 @@ RA_assoc_indep(g=g_test, y=y_test, z=z_test, HWE=F)
 RA_assoc_indep(g=g_test, y=y_test, z=z_test, HWE=T)
 
 ```
-- <a name="indep"></a> [Mixture of Indepedent and Sibling Pairs] 
+- <a name="indep_sib_mix"></a> [Mixture of Indepedent and Sibling Pairs] 
 
 ```R
 ########################################################################
