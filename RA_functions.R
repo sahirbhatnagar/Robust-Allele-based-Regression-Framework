@@ -1,3 +1,5 @@
+library(Matrix)
+
 ### partition genotypes to alleles
 RA_split <- function(g){
 	sapply(g, function(x) ((x==1)*sample(c(0,1), size=2) + (x != 1)*c(x/2, x/2)))
@@ -124,3 +126,86 @@ RA_pedi_assoc <- function(gIndep, gSib, yMat_indep, yMat_sib, phi=0.25, thres=10
 	return(test_stat[1,1])
 }
 
+fast_alpha <- function(gIndep, gSib, rho, phi=0.25){
+	a <- phi*(1+rho); f <- length(gSib); n <- length(gIndep)
+	alpha <- (sum(gIndep)/(1+rho) + sum(gSib)/(1+2*a))/(2*n/(1+rho) + 2*f/(1+2*a))
+	return(alpha)
+}
+
+fast_sigma <- function(gIndep, gSib, rho, phi=0.25){
+	alpha <- fast_alpha(gIndep=gIndep, gSib=gSib, rho=rho, phi=phi)
+	a <- phi*(1+rho); f <- length(gSib); n <- length(gIndep)
+	RA_ind <- RA_split(gIndep)-alpha
+	RA_sib <- RA_split(gSib)-alpha
+	ind_mat <- matrix(RA_ind, ncol=2, byrow=T)
+	ind_kernel <- sum(RA_ind^2)-2*rho*sum(ind_mat[,1]*ind_mat[,2])
+	sib_mat <- matrix(RA_sib, ncol=4, byrow=T)
+	sib_kernel <- (1-2*a^2)*sum(RA_sib^2) + 4*a^2*sum(sib_mat[,1]*sib_mat[,2] + sib_mat[,3]*sib_mat[,4]) - 2*a*sum((sib_mat[,1]+sib_mat[,2])*(sib_mat[,3]+sib_mat[,4]))
+	sigma <- (ind_kernel/(1-rho^2) + sib_kernel/(1-4*a^2))/(2*n + 2*f)
+	return(c(alpha, sigma))
+}
+
+rho_second <- function(gIndep, gSib, rho, phi=0.25){
+	a <- phi*(1+rho); f <- length(gSib); n <- length(gIndep)
+	para <- fast_sigma(gIndep, gSib, rho=rho)
+	alpha <- para[1]; sigma <- para[2]
+	RA_ind <- RA_split(gIndep)-alpha
+	ind_mat <- matrix(RA_ind, ncol=2, byrow=T)
+	sib_mat <- matrix((gSib-2*alpha), ncol=2, byrow=T)
+	ind_kernel <- n*rho/(1-rho^2) - (rho*sum(RA_ind^2)-(1+rho^2)*sum(ind_mat[,1]*ind_mat[,2]))/sigma/(1-rho^2)^2
+	sib_kernel <- 2*f*a/(1-4*a^2) - (2*a*sum(gSib^2) - (1+4*a^2)*sum(sib_mat[,1]*sib_mat[,2]))/sigma/(1-4*a^2)^2
+	rho_score <- ind_kernel + sib_kernel/4
+	ind_2nd <- n*(1+rho^2)/(1-rho^2)^2 - ((1+3*rho^2)*sum(RA_ind^2)-2*rho*(3+rho^2)*sum(ind_mat[,1]*ind_mat[,2]))/sigma/(1-rho^2)^3
+	sib_2nd <- 2*f*(1+4*a^2)/(1-4*a^2)^2 - (2*(1+12*a^2)*sum(gSib^2) - 8*a*(3+4*a^2)*sum(sib_mat[,1]*sib_mat[,2]))/sigma/(1-4*a^2)^3
+	rho_2nd <- ind_2nd + sib_2nd/16
+	return(c(rho_score, rho_2nd, alpha, sigma))
+}
+
+fast_rho <- function(gIndep, gSib, phi=0.25, crit=10^(-8)){
+	if(sum(gIndep, gSib) <= 0){
+		return(NA)
+	}
+	rho_temp <- 0
+	temp_values <- rho_second(gIndep=gIndep, gSib=gSib, rho=rho_temp, phi=phi)
+	i <- 0
+	while(abs(temp_values[1]) > crit){
+		rho_temp <- rho_temp - temp_values[1]/temp_values[2]
+		temp_values <- rho_second(gIndep=gIndep, gSib=gSib, rho=rho_temp, phi=phi)
+	}
+	return(c(temp_values[3:4], rho_temp))
+}
+
+mix_score_fn <- function(gIndep, gSib, yIndep, ySib, alpha, rho, sigma, phi=0.25){
+	a <- phi*(1+rho)
+	score_indep <- sum(yIndep*(gIndep-2*alpha))/sigma/(1+rho)
+	y_sib_mat <- matrix(ySib, ncol=2, byrow=T)
+	g_sib_mat <- matrix(gSib-2*alpha, ncol=2, byrow=T)
+	score_sib <- (sum(ySib*(gSib-2*alpha)) - 2*a*sum(y_sib_mat[,1]*g_sib_mat[,2] + y_sib_mat[,2]*g_sib_mat[,1]))/sigma/(1-4*a^2)
+	score_total <- score_indep + score_sib
+	return(score_total)
+}
+
+
+multi_info <- function(yMat_indep, yMat_sib, sigma, rho, phi=0.25){
+	k <- ncol(yMat_indep)
+	n <- nrow(yMat_indep); f <- nrow(yMat_sib); a <- phi*(1+rho)
+	info_mat <- matrix(ncol=(k+1), nrow=(k+1))
+	info_mat[1,1] <- 2*n/(1+rho) + 2*f/(1+2*a)
+	info_mat[1,2:(k+1)] <- sapply(1:k, function(x) 2*sum(yMat_indep[,x])/(1+rho) + 2*sum(yMat_sib[,x])/(1+2*a))
+	for(i in 1:k){
+		for(l in i:k){
+			info_mat[(i+1),(l+1)] <- mix_info_vec(u_indep=yMat_indep[,i], u_sib=yMat_sib[,i], w_indep=yMat_indep[,l], w_sib=yMat_sib[,l], rho=rho, a=a)
+		}
+	}
+	final_info <- forceSymmetric(info_mat)
+	final_info <- final_info/sigma
+	return(solve(final_info))
+}
+
+mix_info_vec <- function(u_indep, u_sib, w_indep, w_sib, rho, a ){
+	u_sib_mat <- matrix(u_sib, ncol=2, byrow=T)
+	w_sib_mat <- matrix(w_sib, ncol=2, byrow=T)
+	indep_sum <- 2*sum(u_indep*w_indep)/(1+rho)
+	sib_sum <- 2*(sum(u_sib*w_sib) -2*a*(sum(u_sib_mat[,1]*w_sib_mat[,2]) + sum(u_sib_mat[,2]*w_sib_mat[,1])))/(1-4*a^2)
+	return(indep_sum + sib_sum)
+}
