@@ -64,17 +64,19 @@ RA_assoc_indep(g=g_test, y=y_test, z=z_test, HWE=T)
 ########################################################################################
 
 nIndep <- 1000; nSib <- 500
-gInd <- sample(0:2, size=nIndep, replace=T, prob=c(0.64, 0.32, 0.04))
-gSib <- sample(0:2, size=nSib, replace=T, prob=c(0.64, 0.32, 0.04))
 
+gInd <- sample(0:2, size=nIndep, replace=T, prob=c(0.64, 0.32, 0.04))
 y1Indep <- rnorm(nIndep); y2Indep <- rnorm(nIndep)
 yMatIndep <- matrix(c(y1Indep, y2Indep), ncol=2)
 
-y1Sib <- rnorm(nSib); y2Sib <- rnorm(nSib)
+gSib_test <- simSib(nRep=1, f=nSib/2, p=0.2, p2=0)
+gSib1_causal <- simSib(nRep=1, f=nSib/2, p=0.2, p2=0)
+gSib2_causal <- simSib(nRep=1, f=nSib/2, p=0.3, p2=0)
+y1Sib <- 0.03 + 0.02*gSib1_causal + rnorm(nSib)
+y2Sib <- 0.01 + 0.03*gSib2_causal + rnorm(nSib)
 yMatSib <- matrix(c(y1Sib, y2Sib), ncol=2)
 
-RA_pedi_assoc(gIndep=gInd, gSib=gSib, yMat_indep=yMatIndep, yMat_sib=yMatSib)
-
+RA_pedi_assoc(gIndep=gInd, gSib=gSib_test, yMat_indep=yMatIndep, yMat_sib=yMatSib)
 ```
 - <a name="indep_HWE"></a> [Test of HWE] with independent samples
 
