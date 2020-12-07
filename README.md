@@ -1,13 +1,19 @@
 # Robust-Allele-based-Regression
 Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 
+
+## Table of Contents
+- [Import RA source functions](#import_functions)
+- [Independent samples with multiple Ys and Zs](#indep)
+- [Mixture of Indepedent and Sibling Pairs](#indep_sib_mix)
+
 ## :heavy_plus_sign: Examples
-- Import [RA functions](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/RA_functions.R)
+- <a name="import_functions"></a> Import [RA functions](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/RA_functions.R)
 ```R
 source('RA_functions.R')
 ```
 
-- [Independent samples] Independent samples, Y can be continuous or binary
+- <a name="indep"></a> [Independent samples] Independent samples, Y can be continuous or binary
 ```R
 ########################################################################
 ########################################################################
@@ -40,7 +46,7 @@ RA_assoc_indep(g=g_test, y=y_test, z=z_test, HWE=F)
 RA_assoc_indep(g=g_test, y=y_test, z=z_test, HWE=T)
 
 ```
-- [Mixture of Indepedent and Sibling Pairs] 
+- <a name="indep"></a> [Mixture of Indepedent and Sibling Pairs] 
 
 ```R
 ########################################################################
