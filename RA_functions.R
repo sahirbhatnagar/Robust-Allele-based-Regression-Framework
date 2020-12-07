@@ -210,3 +210,63 @@ mix_info_vec <- function(u_indep, u_sib, w_indep, w_sib, rho, a ){
 	sib_sum <- 2*(sum(u_sib*w_sib) -2*a*(sum(u_sib_mat[,1]*w_sib_mat[,2]) + sum(u_sib_mat[,2]*w_sib_mat[,1])))/(1-4*a^2)
 	return(indep_sum + sib_sum)
 }
+
+##simulate sibpair genotypes assuming population level HWD
+
+mtType <- function(x){
+	s <- sum(x)
+	if(s==4){
+		return(1)
+	}
+	if(s==3){
+		return(2)
+	}
+	if(s==2){
+		pro <- x[1]*x[2]
+		if(pro==0){
+			return(3)
+		}
+		if(pro==1){
+			return(4)
+		}
+	}
+	if(s==1){
+		return(5)
+	}
+	if(s==0){
+		return(6)
+	}
+}
+
+
+simSib <- function(nRep, f, p, p2){
+	p1 <- 2*(p-p2)
+	p0 <- 1-p1-p2
+	parent <- rmultinom(nRep, size=f, prob=c(p2^2, 2*p1*p2, 2*p0*p2, p1^2, 2*p0*p1, p0^2))
+#	print(parent)
+	sibgeno <- apply(parent, 2, a_fn)
+	#print(sibgeno)
+	ramsib <- apply(sibgeno, 2, function(x) rep(1:9, x)[sample(1:f, f)])
+	sib_mat <- apply(ramsib, 2, function(x) as.numeric(sapply(x, b_fn)))
+	return(sib_mat)                                            
+	}
+
+a_fn <- function(x){
+	og_mat <- matrix(c(1, 0, 0, 0.5, 0.5, 0, 0, 1, 0, 0.25, 0.5, 0.25, 0, 0.5, 0.5, 0, 0, 1), ncol=3, byrow=T)
+	mt_to_sib <- t(apply(og_mat, 1, function(x) c(x[1]^2, x[1]*x[2], x[1]*x[2], x[1]*x[3], x[1]*x[3], x[2]^2, x[2]*x[3], x[2]*x[3], x[3]^2)))
+	mat1 <- rmultinom(1, size=x[1], prob=mt_to_sib[1,])
+	mat2 <- rmultinom(1, size=x[2], prob=mt_to_sib[2,])
+	mat3 <- rmultinom(1, size=x[3], prob=mt_to_sib[3,])
+	mat4 <- rmultinom(1, size=x[4], prob=mt_to_sib[4,])
+	mat5 <- rmultinom(1, size=x[5], prob=mt_to_sib[5,])
+	mat6 <- rmultinom(1, size=x[6], prob=mt_to_sib[6,])
+	return(mat1+mat2+mat3+mat4+mat5+mat6)
+}
+
+b_fn <- function(x){
+	(x==1)*(c(2,2))+(x==2)*c(2,1)+(x==3)*c(1,2)+(x==4)*c(2,0)+(x==5)*c(0,2)+(x==6)*c(1,1)+(x==7)*c(0,1)+(x==8)*c(1,0)+(x==9)*c(0,0)
+}
+
+
+				      
+				
