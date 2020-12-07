@@ -1,4 +1,4 @@
-# Robust-Allele-based-Regression
+# Robust Allele-based Regression Framework
 Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 
 
