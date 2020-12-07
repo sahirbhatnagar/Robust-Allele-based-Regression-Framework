@@ -6,6 +6,7 @@ Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 - [Import RA source functions](#import_functions)
 - [Independent samples with multiple Ys and Zs](#indep)
 - [Mixture of Indepedent and Sibling Pairs](#indep_sib_mix)
+- [Test of HWE](#indep_HWE)
 
 ## :heavy_plus_sign: Examples
 - <a name="import_functions"></a> Save [RA functions](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/RA_functions.R) in the working directory
@@ -75,3 +76,5 @@ yMatSib <- matrix(c(y1Sib, y2Sib), ncol=2)
 RA_pedi_assoc(gIndep=gInd, gSib=gSib, yMat_indep=yMatIndep, yMat_sib=yMatSib)
 
 ```
+- <a name="indep_HWE"></a> [Test of HWE] with independent samples
+
