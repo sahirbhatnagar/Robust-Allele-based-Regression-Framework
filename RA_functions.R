@@ -123,7 +123,8 @@ RA_pedi_assoc <- function(gIndep, gSib, yMat_indep, yMat_sib, phi=0.25, thres=10
 	fisher_inverse <- multi_info(yMat_indep=yMat_indep, yMat_sib=yMat_sib, sigma=sigma, rho=rho)
 	score_fn <- matrix(c(0, score_fn), ncol=1)
 	test_stat <- t(score_fn)%*%fisher_inverse%*%score_fn
-	return(test_stat[1,1])
+	pval <- pchisq(test_stat[1,1], df=length(score_fn), lower.tail=F)
+	return(pval)
 }
 
 fast_alpha <- function(gIndep, gSib, rho, phi=0.25){
