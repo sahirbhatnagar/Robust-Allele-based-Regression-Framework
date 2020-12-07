@@ -38,14 +38,13 @@ RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
 		if(any(is.na(z))){
 			stop('Covariates contain NAs')
 		}
-	}else{
 		if(class(z)=='numeric'){
 			z <- matrix(z, ncol=1)
 		}
 		z_var <- apply(z, 2, var)
 		if(any(z_var <= 0)){
 			stop('variance of Z is 0')
-		}
+		}		
 	}
 	if(var(g) <= 0){
 		stop('variance of G is 0')
@@ -58,13 +57,13 @@ RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
 		stop('variance of Y is 0')
 	}
 	if(!is.null(z)){
-		return(RA_indep_Z(g=g, y=y, z=z))
+		return(RA_indep_Z(g=g, y=y, z=z, HWE=HWE))
 	}else{
-		return(RA_indep(g=g, y=y))	
+		return(RA_indep(g=g, y=y, HWE=HWE))	
 	}
 }
 
-RA_indep_Z <- function(g, y, z){
+RA_indep_Z <- function(g, y, z, HWE=F){
 	n <- length(g)
 	g_RA <- RA_split(g); gbar <- mean(g_RA)
 	g_vec <- matrix(g_RA-gbar, ncol=1)
@@ -79,90 +78,37 @@ RA_indep_Z <- function(g, y, z){
 	score_fn <- t(y_RA)%*%(g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)
 	score_vec <- matrix(c(0, score_fn[,1], rep(0, ncol(z))), ncol=1)
 	sigma_hat <- t(g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)%*%(g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)/length(g_RA)
-	rho_mat <- (g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)[,1]
+	if(HWE){
+		rho_hat <- 0
+	}else{
+		rho_mat <- (g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)[,1]
 	rho_mat <- matrix(rho_mat, byrow=T, ncol=2)
 	rho_hat <- sum(rho_mat[,1]*rho_mat[,2])/n/sigma_hat
+	}
 	RA_stat <- t(score_vec)%*%solve(t(X)%*%X)%*%score_vec/sigma_hat/(1+rho_hat)
 	RA_pval <- pchisq(RA_stat[1,1], df=nrow(score_fn), lower.tail=F)
 	return(RA_pval)
 }
 
-RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
-	## 1: screen for NAs, check var(G), var(Y), var(Z)
-	if(any(is.na(g))){
-		stop('Genotypes contain NAs')
-	}
-	if(any(is.na(y))){
-		stop('Phenotypes contain NAs')
-	}
-	if(!is.null(z)){
-		if(any(is.na(z))){
-			stop('Covariates contain NAs')
-		}
-	}else{
-		if(class(z)=='numeric'){
-			z <- matrix(z, ncol=1)
-		}
-		z_var <- apply(z, 2, var)
-		if(any(z_var <= 0)){
-			stop('variance of Z is 0')
-		}
-	}
-	if(var(g) <= 0){
-		stop('variance of G is 0')
-	}
-	if(class(y) == 'numeric'){
-		y <- matrix(y, ncol=1)
-	}
-	y_var <- apply(y, 2, var)
-	if(any(y_var <=0)){
-		stop('variance of Y is 0')
-	}
-	if(!is.null(z)){
-		return(RA_indep_Z(g=g, y=y, z=z))
-	}else{
-		return(RA_indep(g=g, y=y))	
-	}
-}
-
-RA_indep_Z <- function(g, y, z){
-	n <- length(g)
-	g_RA <- RA_split(g); gbar <- mean(g_RA)
-	g_vec <- matrix(g_RA-gbar, ncol=1)
-	one_vec <- matrix(rep(1, length(g_RA)), ncol=1)
-	y_RA <- apply(y, 2, function(x) rep(x, each=2))
-	z_RA <- apply(z, 2, function(x) rep(x, each=2))
-	X <- cbind(one_vec, y_RA, z_RA)
-	z_bar <- apply(z_RA, 2, mean)
-	z_bar <- matrix(z_bar, ncol=1)
-	var_gamma <- t(z_RA)%*%z_RA - z_bar%*%t(z_bar)
-	gamma_hat <- solve(var_gamma)%*%t(z_RA)%*%g_vec
-	score_fn <- t(y_RA)%*%(g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)
-	score_vec <- matrix(c(0, score_fn[,1], rep(0, ncol(z))), ncol=1)
-	sigma_hat <- t(g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)%*%(g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)/length(g_RA)
-	rho_mat <- (g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)[,1]
-	rho_mat <- matrix(rho_mat, byrow=T, ncol=2)
-	rho_hat <- sum(rho_mat[,1]*rho_mat[,2])/n/sigma_hat
-	RA_stat <- t(score_vec)%*%solve(t(X)%*%X)%*%score_vec/sigma_hat/(1+rho_hat)
-	RA_pval <- pchisq(RA_stat[1,1], df=nrow(score_fn), lower.tail=F)
-	return(RA_pval)
-}
-
-RA_indep <- function(g, y){
+RA_indep <- function(g, y, HWE=F){
 	n <- length(g)
 	g_RA <- RA_split(g); gbar <- mean(g_RA)
 	g_vec <- matrix(g_RA-gbar, ncol=1)
 	y_RA <- apply(y, 2, function(x) rep(x, each=2))
 	score_fn <- apply(y_RA, 2, function(x) sum(x*g_vec))
-	score_vec <- matrix(c(0, score_fn[,1])), ncol=1)
+	score_vec <- matrix(c(0, score_fn), ncol=1)
 	sigma_hat <- gbar*(1-gbar)
 	g_mat <- matrix(g_vec, ncol=2, byrow=T)
-	rho_hat <- sum(g_mat[,1]*g_mat[,2])/n/sigma_hat
+	if(HWE){
+		rho_hat <- 0
+	}else{
+		rho_hat <- sum(g_mat[,1]*g_mat[,2])/n/sigma_hat
+	}
 	one_vec <- matrix(rep(1, n*2), ncol=1)
 	y_mat <- as.matrix(cbind(one_vec, y_RA))
 	info_inv <- solve(t(y_mat)%*%y_mat)
 	RA_stat <- t(score_vec)%*%info_inv%*%score_vec/sigma_hat/(1+rho_hat)
-	RA_pval <- pchisq(RA_stat[1,1], df=nrow(score_fn), lower.tail=F)
+	RA_pval <- pchisq(RA_stat[1,1], df=length(score_fn), lower.tail=F)
 	return(RA_pval)
 }
 
