@@ -8,7 +8,7 @@ Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 - [Mixture of Indepedent and Sibling Pairs](#indep_sib_mix)
 
 ## :heavy_plus_sign: Examples
-- <a name="import_functions"></a> Import [RA functions](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/RA_functions.R)
+- <a name="import_functions"></a> Save [RA functions](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/RA_functions.R) in the working directory
 ```R
 source('RA_functions.R')
 ```
