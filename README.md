@@ -89,10 +89,10 @@ RA_pedi_assoc(gIndep=gInd, gSib=gSib, yMat_indep=yMatIndep, yMat_sib=yMatSib)
 ########################################################################
 ########################################################################
 
-g1 <- sample(0:2, size=1000, replace=T, prob=c(0.64, 0.32, 0.04)
+g1 <- sample(0:2, size=1000, replace=T, prob=c(0.64, 0.32, 0.04))
 indep_HWE(g=g1)
 
-g1 <- sample(0:2, size=1000, replace=T, prob=c(0.6, 0.3, 0.1)
+g1 <- sample(0:2, size=1000, replace=T, prob=c(0.6, 0.3, 0.1))
 indep_HWE(g=g2)
 
 ```
