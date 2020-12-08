@@ -5,9 +5,9 @@ Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 ## Table of Contents
 - [Import RA source functions](#import_functions)
 - [Independent samples with multiple Ys and Zs](#indep)
-- [Mixture of Indepedent and Sibling Pairs](#indep_sib_mix)
+- [Mixture of indepedent and sibling pairs](#indep_sib_mix)
 - [Test of HWE](#indep_HWE)
-- [Multiple Population](#multi_pop)
+- [Samples from multiple population association testing](#multi_pop)
 
 ## :heavy_plus_sign: Examples
 - <a name="import_functions"></a> Save [RA functions](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/RA_functions.R) in the working directory
