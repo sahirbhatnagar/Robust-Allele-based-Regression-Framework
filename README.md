@@ -7,6 +7,7 @@ Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 - [Independent samples with multiple Ys and Zs](#indep)
 - [Mixture of Indepedent and Sibling Pairs](#indep_sib_mix)
 - [Test of HWE](#indep_HWE)
+- [Multiple Population](#multi_pop)
 
 ## :heavy_plus_sign: Examples
 - <a name="import_functions"></a> Save [RA functions](https://github.com/lzhangdc/Robust-Allele-based-Regression-Framework/blob/main/RA_functions.R) in the working directory
@@ -98,3 +99,37 @@ g2 <- sample(0:2, size=1000, replace=T, prob=c(0.6, 0.3, 0.1))
 RA_HWE(g=g2)
 
 ```
+- <a name="multi_pop"></a> [Association testing] with independent samples from multiple population
+```R
+########################################################################
+########################################################################
+#### Function inputs:
+#### - g: genotypes of independent samples
+#### - y: phenotype traits (nIndep x J matrix) of the independent samples
+#### - z: population factor
+########################################################################
+#### Function output:
+#### - p-value of the RA association test
+########################################################################
+########################################################################
+
+nI <- 500; nII <- 1500
+
+yI <- sample(0:1, size=nI, replace=T, prob=c(0.8, 0.2))
+yII <- sample(0:1, size=nII, replace=T, prob=c(0.5, 0.5))
+y1 <- matrix(c(yI, yII), ncol=1)
+y2 <- matrix(rnorm((nI+nII)), ncol=1)
+
+g1 <- sample(0:2, size=nI, replace=T, prob=c(0.64, 0.32, 0.04))
+g2 <- sample(0:2, size=nII, replace=T, prob=c(0.6, 0.3, 0.1))
+
+z <- rep(c('I', 'II'), c(nI, nII))
+g <- c(g1, g2)
+y <- cbind(y1, y2)
+
+RA_multi_pop(g, y, z)
+
+```
+
+
+
