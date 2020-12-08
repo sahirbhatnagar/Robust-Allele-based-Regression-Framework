@@ -2,7 +2,7 @@ library(Matrix)
 
 ### partition genotypes to alleles
 RA_split <- function(g){
-	sapply(g, function(x) ((x==1)*sample(c(0,1), size=2) + (x != 1)*c(x/2, x/2)))
+	as.numeric(sapply(g, function(x) ((x==1)*sample(c(0,1), size=2) + (x != 1)*c(x/2, x/2))))
 }
 
 ### Test of HWE using RA framework
@@ -20,12 +20,13 @@ RA_HWE <- function(g){
 	if(var(g) <= 0){
 		stop('All genotypes are identical')
 	}
-	n <- length(g); n2 <- sum(g==2)
-	p2 <- n2/n; p <- mean(g)/2
-	rho <- (p2-p^2)/p/(1-p)
-	pchisq(n*rho^2, df=1, lower.tail=F)
+	n <- length(g)
+	g_RA <- RA_split(g); alpha <- mean(g_RA)
+	sigma <- mean((g_RA-alpha)^2)
+	g_mat <- matrix(g_RA-alpha, byrow=T, ncol=2)
+	rho_new <- mean(g_mat[,1]*g_mat[,2])/sigma
+	return(pchisq(n*rho_new^2, df=1, lower.tail=F))
 }
-
 
 ### Association test for independent samples
 RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
