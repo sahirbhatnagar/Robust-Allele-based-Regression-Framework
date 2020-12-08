@@ -24,9 +24,10 @@ RA_HWE <- function(g){
 	g_RA <- RA_split(g); alpha <- mean(g_RA)
 	sigma <- mean((g_RA-alpha)^2)
 	g_mat <- matrix(g_RA-alpha, byrow=T, ncol=2)
-	rho_new <- mean(g_mat[,1]*g_mat[,2])/sigma
-	return(pchisq(n*rho_new^2, df=1, lower.tail=F))
+	rho <- mean(g_mat[,1]*g_mat[,2])/sigma
+	return(pchisq(n*rho^2, df=1, lower.tail=F))
 }
+
 
 ### Association test for independent samples
 RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
@@ -244,9 +245,7 @@ simSib <- function(nRep, f, p, p2){
 	p1 <- 2*(p-p2)
 	p0 <- 1-p1-p2
 	parent <- rmultinom(nRep, size=f, prob=c(p2^2, 2*p1*p2, 2*p0*p2, p1^2, 2*p0*p1, p0^2))
-#	print(parent)
 	sibgeno <- apply(parent, 2, a_fn)
-	#print(sibgeno)
 	ramsib <- apply(sibgeno, 2, function(x) rep(1:9, x)[sample(1:f, f)])
 	sib_mat <- apply(ramsib, 2, function(x) as.numeric(sapply(x, b_fn)))
 	return(sib_mat)                                            
@@ -267,6 +266,9 @@ a_fn <- function(x){
 b_fn <- function(x){
 	(x==1)*(c(2,2))+(x==2)*c(2,1)+(x==3)*c(1,2)+(x==4)*c(2,0)+(x==5)*c(0,2)+(x==6)*c(1,1)+(x==7)*c(0,1)+(x==8)*c(1,0)+(x==9)*c(0,0)
 }
+
+
+### Multiple population
 
 RA_multi_pop <- function(g, y, z){
 	g <- matrix(g, ncol=1)
@@ -329,8 +331,9 @@ score_pop <- function(g_pop, y_pop){
 	n <- length(g_pop)
 	alpha <- mean(g_pop)/2
 	sigma <- alpha*(1-alpha)
-	g_RA <- t(RA_split(g_pop))
-	rho <- sum((g_RA[,1]-alpha)*(g_RA[,2]-alpha))/sigma/n
+	g_RA <- RA_split(g_pop)
+	g_mat <- matrix(g_RA, ncol=2, byrow=T)
+	rho <- sum((g_mat[,1]-alpha)*(g_mat[,2]-alpha))/sigma/n
 	temp_score <- apply(y_pop, 2, function(u) sum(u*(g_pop - 2*alpha)))/sigma/(1+rho)
 	info_alpha <- 2*n/sigma/(1+rho)
 	info_beta <- apply(y_pop, 2, function(t) sum(t)*2)/sigma/(1+rho)
