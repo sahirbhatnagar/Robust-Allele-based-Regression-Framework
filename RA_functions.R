@@ -267,6 +267,82 @@ b_fn <- function(x){
 	(x==1)*(c(2,2))+(x==2)*c(2,1)+(x==3)*c(1,2)+(x==4)*c(2,0)+(x==5)*c(0,2)+(x==6)*c(1,1)+(x==7)*c(0,1)+(x==8)*c(1,0)+(x==9)*c(0,0)
 }
 
+RA_multi_pop <- function(g, y, z){
+	g <- matrix(g, ncol=1)
+	if(!is.matrix(y)){
+		stop('y must be a n x J matrix')
+	}
+	if(!is.factor(z)){
+		z <- as.factor(as.character(z))
+	}
+	if(length(levels(z)) < 2){
+		stop('z must be a multi-level factor')
+	}
+	if(any(is.na(g))){
+		stop('Genotypes contain NAs')
+	}
+	if(any(is.na(y))){
+		stop('Phenotypes contain NAs')
+	}
+	pop_levels <- levels(z)
+	g_var_check <- sapply(pop_levels, function(x) var(g[z==x]))
+	if(any(g_var_check <= 0)){
+		stop('Genotypes of at least one population are identical')
+	}
+	J <- ncol(y); K <- length(pop_levels)
+	y_var_check <- matrix(ncol=J, nrow=K)
+	for(j in 1:J){
+		y_var_check[,j] <- sapply(pop_levels, function(x) var(y[z==x,j]))
+	}
+	if(any(y_var_check <= 0)){
+		stop('Phenotypes of at least one population are identical')
+	}
+	multi_pop(g, y, z)
+}
 
-				      
-				
+multi_pop <- function(g, y, z){
+	pop_levels <- levels(z)
+	total_score <- 0
+	J <- ncol(y); K <- length(pop_levels)
+	final_info <- matrix(data=0, nrow=(K+J), ncol=(K+J))
+	for(k in 1:K){
+		g_temp <- g[z==pop_levels[k]]
+		y_temp <- y[z==pop_levels[k],]
+		temp_list <- score_pop(g_temp, y_temp)
+		total_score <- total_score + temp_list$score
+		final_info[k,k] <- temp_list$info_alpha
+		final_info[k, (K+1):(K+J)] <- temp_list$info_beta
+		final_info[(K+1):(K+J), (K+1):(K+J)] <- final_info[(K+1):(K+J), (K+1):(K+J)] + temp_list$beta_mat
+	}
+	final_info <- as.matrix(forceSymmetric(final_info))
+	final_inv <- solve(final_info)
+	score_fn <- matrix(c(rep(0, K), total_score), ncol=1)
+	pop_stat <- t(score_fn)%*%final_inv%*%score_fn
+	return(pchisq(pop_stat[1,1], df=J, lower.tail=F))
+}
+
+score_pop <- function(g_pop, y_pop){
+	if(is.numeric(y_pop)){
+		y_pop <- matrix(y_pop, ncol=1)
+	}
+	n <- length(g_pop)
+	alpha <- mean(g_pop)/2
+	sigma <- alpha*(1-alpha)
+	g_RA <- t(RA_split(g_pop))
+	rho <- sum((g_RA[,1]-alpha)*(g_RA[,2]-alpha))/sigma/n
+	temp_score <- apply(y_pop, 2, function(u) sum(u*(g_pop - 2*alpha)))/sigma/(1+rho)
+	info_alpha <- 2*n/sigma/(1+rho)
+	info_beta <- apply(y_pop, 2, function(t) sum(t)*2)/sigma/(1+rho)
+	J <- ncol(y_pop)
+	beta_mat <- matrix(ncol=J, nrow=J)
+	for(i in 1:J){
+		for(j in i:J){
+			beta_mat[i, j] <- 2*sum(y_pop[,i]*y_pop[,j])
+		}
+	}
+	beta_mat <- beta_mat/sigma/(1+rho)
+	beta_mat <- as.matrix(forceSymmetric(beta_mat))
+	pop_list <- list(temp_score, info_alpha, info_beta, beta_mat)
+	names(pop_list) <- c('score', 'info_alpha', 'info_beta', 'beta_mat')
+	return(pop_list)
+}
