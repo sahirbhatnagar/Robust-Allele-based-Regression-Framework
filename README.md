@@ -15,7 +15,7 @@ Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 source('RA_functions.R')
 ```
 
-- <a name="indep"></a> [Independent samples] Independent samples, Y can be continuous or binary
+- <a name="indep"></a> [Independent samples], Y can be continuous or binary
 ```R
 ########################################################################
 ########################################################################
