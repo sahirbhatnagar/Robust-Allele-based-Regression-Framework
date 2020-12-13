@@ -77,7 +77,7 @@ RA_indep_Z <- function(g, y, z, HWE=F){
 	X <- cbind(one_vec, y_RA, z_RA)
 	z_bar <- apply(z_RA, 2, mean)
 	z_bar <- matrix(z_bar, ncol=1)
-	var_gamma <- t(z_RA)%*%z_RA - z_bar%*%t(z_bar)
+	var_gamma <- t(z_RA)%*%z_RA - t(z_RA)%*%one_vec%*%t(z_bar)
 	gamma_hat <- solve(var_gamma)%*%t(z_RA)%*%g_vec
 	score_fn <- t(y_RA)%*%(g_vec - (z_RA - one_vec%*%t(z_bar))%*%gamma_hat)
 	score_vec <- matrix(c(0, score_fn[,1], rep(0, ncol(z))), ncol=1)
