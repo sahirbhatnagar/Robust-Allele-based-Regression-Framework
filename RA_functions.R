@@ -121,11 +121,11 @@ RA_indep <- function(g, y, HWE=F){
 RA_pedi_assoc <- function(gIndep, gSib, yMat_indep, yMat_sib, phi=0.25, thres=10^(-8)){
 	para_vec <- fast_rho(gIndep=gIndep, gSib=gSib, phi=phi, crit=thres)
 	alpha <- para_vec[1]; sigma <- para_vec[2]; rho <- para_vec[3]
-	score_fn <- sapply(1:ncol(yMat_indep), function(k) mix_score_fn(gIndep=gIndep, gSib=gSib, yIndep=yMat_indep[,k], ySib=yMat_sib[,k], alpha=alpha, sigma=sigma, rho=rho))
+	score_fn_org <- sapply(1:ncol(yMat_indep), function(k) mix_score_fn(gIndep=gIndep, gSib=gSib, yIndep=yMat_indep[,k], ySib=yMat_sib[,k], alpha=alpha, sigma=sigma, rho=rho))
 	fisher_inverse <- multi_info(yMat_indep=yMat_indep, yMat_sib=yMat_sib, sigma=sigma, rho=rho)
-	score_fn <- matrix(c(0, score_fn), ncol=1)
+	score_fn <- matrix(c(0, score_fn_org), ncol=1)
 	test_stat <- t(score_fn)%*%fisher_inverse%*%score_fn
-	pval <- pchisq(test_stat[1,1], df=length(score_fn), lower.tail=F)
+	pval <- pchisq(test_stat[1,1], df=length(score_fn_org), lower.tail=F)
 	return(pval)
 }
 
