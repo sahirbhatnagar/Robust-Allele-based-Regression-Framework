@@ -325,7 +325,7 @@ multi_pop <- function(g, y, z){
 }
 
 score_pop <- function(g_pop, y_pop){
-	if(is.numeric(y_pop)){
+	if(!is.matrix(y_pop)){
 		y_pop <- matrix(y_pop, ncol=1)
 	}
 	n <- length(g_pop)
