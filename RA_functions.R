@@ -350,3 +350,23 @@ score_pop <- function(g_pop, y_pop){
 	names(pop_list) <- c('score', 'info_alpha', 'info_beta', 'beta_mat')
 	return(pop_list)
 }
+
+			   RA_sibpairs <- function(gSib, yMat_sib, phi=0.25){
+	f <- length(gSib)/2
+	gSib_RA <- RA_split(gSib)
+	p <- mean(gSib_RA)
+	sigma <- p*(1-p)
+	aMat <- matrix((gSib-2*p), ncol=2, byrow=T)
+	a <- sum(aMat[,1]*aMat[,2])/4/f/sigma
+	sigma_Sib <- solve(matrix(c(1, 0, a, a, 0, 1, a, a, a, a, 1, 0, a, a, 0, 1), ncol=4, byrow=T))
+	big_mat <- bdiag(replicate(f, list(sigma_Sib)))
+	big_mat <- as.matrix(big_mat)
+	ybar <- mean(yMat_sib)
+	yRA_mat <- matrix(rep(yMat_sib, each=2), ncol=1)
+	gRA_mat <- matrix((gSib_RA-p), ncol=1)
+	score_fn <- t(yRA_mat)%*%big_mat%*%gRA_mat/sigma
+	fisher_info <- sigma/(t(yRA_mat - ybar)%*%big_mat%*%(yRA_mat - ybar))
+	stat <- score_fn^2*fisher_info
+	#return(pchisq(stat[1,1], df=1, lower.tail=F))
+	return(stat[1,1])
+}
