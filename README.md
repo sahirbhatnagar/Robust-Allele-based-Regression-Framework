@@ -6,6 +6,7 @@ Robust Allele-based (RA) Regression Framework for Genetic Association Studies
 - [Import RA source functions](#import_functions)
 - [Independent samples with multiple Ys and Zs](#indep)
 - [Mixture of indepedent and sibling pairs](#indep_sib_mix)
+- [Sibling Pairs Only](#sib_only)
 - [Test of HWE](#indep_HWE)
 - [Samples from multiple population association testing](#multi_pop)
 
@@ -70,14 +71,40 @@ gInd <- sample(0:2, size=nIndep, replace=T, prob=c(0.64, 0.32, 0.04))
 y1Indep <- rnorm(nIndep); y2Indep <- rnorm(nIndep)
 yMatIndep <- matrix(c(y1Indep, y2Indep), ncol=2)
 
-gSib_test <- simSib(nRep=1, f=nSib/2, p=0.2, p2=0)
-gSib1_causal <- simSib(nRep=1, f=nSib/2, p=0.2, p2=0)
-gSib2_causal <- simSib(nRep=1, f=nSib/2, p=0.3, p2=0)
+gSib_test <- simSib(nRep=1, f=nSib/2, p=0.2, p2=0.04)
+gSib1_causal <- simSib(nRep=1, f=nSib/2, p=0.2, p2=0.04)
+gSib2_causal <- simSib(nRep=1, f=nSib/2, p=0.3, p2=0.09)
 y1Sib <- 0.03 + 0.02*gSib1_causal + rnorm(nSib)
 y2Sib <- 0.01 + 0.03*gSib2_causal + rnorm(nSib)
 yMatSib <- matrix(c(y1Sib, y2Sib), ncol=2)
 
 RA_pedi_assoc(gIndep=gInd, gSib=gSib_test, yMat_indep=yMatIndep, yMat_sib=yMatSib)
+```
+- <a name="sib_only"></a> [Sibling Pairs Only] 
+
+```R
+########################################################################################
+########################################################################################
+#### Function inputs:
+#### - gSib: genotype vector (G=0, 1, 2) of the sibling pairs
+#### - yMat_sib: phenotype traits of the sibling pairs
+########################################################################################
+#### Function output:
+#### - p-value of the RA association test 
+########################################################################################
+########################################################################################
+
+nSib <- 500
+
+gSib_test <- simSib(nRep=1, f=nSib/2, p=0.2, p2=0.04)
+gSib1_causal <- simSib(nRep=1, f=nSib/2, p=0.2, p2=0.04)
+gSib2_causal <- simSib(nRep=1, f=nSib/2, p=0.3, p2=0.09)
+y1Sib <- 0.03 + 0.02*gSib1_causal + rnorm(nSib)
+y2Sib <- 0.01 + 0.03*gSib2_causal + rnorm(nSib)
+yMatSib <- matrix(c(y1Sib, y2Sib), ncol=2)
+
+RA_sibpairs(gSib=gSib_test[,1], yMat_sib=y1Sib)
+
 ```
 - <a name="indep_HWE"></a> [Test of HWE] with independent samples
 
