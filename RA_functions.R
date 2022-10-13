@@ -155,16 +155,11 @@ RA_indep_nlme <- function(g, y, z = NULL, HWE=F){
     
   }
   
-  
-
   rf <- anova(fit_null, fit)
   # update(fit, correlation = NULL)
   # summary(fit)
   tt <- summary(fit)
-  
-  # browser()
-  # coef(fit$modelStruct$corStruct, unconstrained = FALSE)
-  # pp <- intervals(fit)$corStruct
+
   return(c(pval = rf$`p-value`[[2]], RA_stat = rf$L.Ratio[[2]], rho = coef(fit$modelStruct$corStruct, unconstrained = FALSE)))
 }
 

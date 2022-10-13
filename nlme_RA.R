@@ -1,6 +1,4 @@
-source("RA_functions.R")
-
-
+source("~/git_repositories/Robust-Allele-based-Regression-Framework/RA_functions.R")
 ########################################################################
 ########################################################################
 #### Function inputs:
