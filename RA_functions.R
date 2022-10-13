@@ -30,7 +30,7 @@ RA_HWE <- function(g){
 
 
 ### Association test for independent samples
-RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
+RA_assoc_indep <- function(g, y, z=NULL, HWE=F, nlme = TRUE){
 	## 1: screen for NAs, check var(G), var(Y), var(Z)
 	if(any(is.na(g))){
 		stop('Genotypes contain NAs')
@@ -42,7 +42,7 @@ RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
 		if(any(is.na(z))){
 			stop('Covariates contain NAs')
 		}
-		if(class(z)=='numeric'){
+		if(class(z)[[1]]=='numeric'){
 			z <- matrix(z, ncol=1)
 		}
 		z_var <- apply(z, 2, var)
@@ -53,7 +53,7 @@ RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
 	if(var(g) <= 0){
 		stop('variance of G is 0')
 	}
-	if(class(y) == 'numeric'){
+	if(class(y)[[1]] == 'numeric'){
 		y <- matrix(y, ncol=1)
 	}
 	y_var <- apply(y, 2, var)
@@ -61,9 +61,17 @@ RA_assoc_indep <- function(g, y, z=NULL, HWE=F){
 		stop('variance of Y is 0')
 	}
 	if(!is.null(z)){
+	  if (nlme) {
+	    return(RA_indep_nlme(g=g, y=y, z = z, HWE=HWE))
+	  } else {
 		return(RA_indep_Z(g=g, y=y, z=z, HWE=HWE))
+	  }
 	}else{
-		return(RA_indep(g=g, y=y, HWE=HWE))	
+	  if (nlme) {
+	    return(RA_indep_nlme(g=g, y=y, z = NULL, HWE=HWE))
+	  } else {
+		return(RA_indep(g=g, y=y, HWE=HWE))
+	  }
 	}
 }
 
@@ -91,7 +99,9 @@ RA_indep_Z <- function(g, y, z, HWE=F){
 	}
 	RA_stat <- t(score_vec)%*%solve(t(X)%*%X)%*%score_vec/sigma_hat/(1+rho_hat)
 	RA_pval <- pchisq(RA_stat[1,1], df=nrow(score_fn), lower.tail=F)
-	return(RA_pval)
+	# return(RA_pval)
+	return(c(pval = RA_pval, RA_stat = RA_stat, rho = rho_hat))
+	
 }
 
 RA_indep <- function(g, y, HWE=F){
@@ -113,8 +123,52 @@ RA_indep <- function(g, y, HWE=F){
 	info_inv <- solve(t(y_mat)%*%y_mat)
 	RA_stat <- t(score_vec)%*%info_inv%*%score_vec/sigma_hat/(1+rho_hat)
 	RA_pval <- pchisq(RA_stat[1,1], df=length(score_fn), lower.tail=F)
-	return(RA_pval)
+	return(c(pval = RA_pval, RA_stat = RA_stat, rho = rho_hat))
 }
+
+library(nlme)
+
+RA_indep_nlme <- function(g, y, z = NULL, HWE=F){
+  # browser()
+  n <- length(g)
+  g_RA <- RA_split(g); gbar <- mean(g_RA)
+  y_RA <- apply(y, 2, function(x) rep(x, each=2))
+  dimnames(y_RA)[[2]] <- paste0("y",1:ncol(y_RA))
+  
+  if (is.null(z)) {
+
+    df <- data.frame(g = g_RA, y_RA, id = rep(1:n, each = 2))
+    fmla <- as.formula(paste0("g ~ ", paste(dimnames(y_RA)[[2]], collapse = "+")))
+    fit <- nlme::gls(fmla, data = df, correlation = corCompSymm(form = ~ 1|id), method = "ML")
+    fit_null <- update(fit, ~ 1)    
+    
+  } else {
+    
+    z_RA <- apply(z, 2, function(x) rep(x, each=2))
+    dimnames(z_RA)[[2]] <- paste0("z",1:ncol(z_RA))
+    df <- data.frame(g = g_RA, y_RA, z_RA, id = rep(1:n, each = 2))
+    fmla <- as.formula(paste0("g ~ ", paste(c(dimnames(y_RA)[[2]],dimnames(z_RA)[[2]]) , collapse = "+")))
+    
+    fit <- nlme::gls(fmla, data = df, correlation = corCompSymm(form = ~ 1|id), method = "ML")
+    fmla_null <- as.formula(paste0("~ ", paste(c(dimnames(z_RA)[[2]]) , collapse = "+")))
+    fit_null <- update(fit, fmla_null)   
+    
+  }
+  
+  
+
+  rf <- anova(fit_null, fit)
+  # update(fit, correlation = NULL)
+  # summary(fit)
+  tt <- summary(fit)
+  
+  # browser()
+  # coef(fit$modelStruct$corStruct, unconstrained = FALSE)
+  # pp <- intervals(fit)$corStruct
+  return(c(pval = rf$`p-value`[[2]], RA_stat = rf$L.Ratio[[2]], rho = coef(fit$modelStruct$corStruct, unconstrained = FALSE)))
+}
+
+
 
 ### RA test of siblings + Independent
 
